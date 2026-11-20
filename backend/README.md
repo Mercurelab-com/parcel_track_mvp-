@@ -1,33 +1,82 @@
-# Backend — ParcelTrack
+# ParcelTrack Backend
 
-## Purpose
-The backend provides REST API services for ParcelTrack, built with **Python**, **FastAPI**, **Pydantic**, and **SQLAlchemy**.
+FastAPI backend service for ParcelTrack — parcel registration and tracking system for transport agencies in Cameroon.
 
-## Responsibilities
-- Handling parcel registration and status transitions.
-- Generating distinct tracking identifiers.
-- Serving public tracking inquiries.
-- Managing arrival notifications.
-- Interfacing with an **SQLite** database for persistent storage.
+---
 
-## Planned Modules
-- `app/api/routes/`: Route controllers for parcels, tracking queries, and health status.
-- `app/core/`: Application settings, environment configuration, and constants.
-- `app/db/`: SQLAlchemy database engine and session factory.
-- `app/models/`: Database ORM models.
-- `app/schemas/`: Pydantic validation and serialization schemas.
-- `app/services/`: Business logic operations (tracking ID creation, state updates).
-- `app/main.py`: Main FastAPI application entry point.
-- `tests/`: Automated unit and integration tests.
+## 1. Prerequisites
 
-## Placeholder Setup
-*Dependencies are not installed yet during the repository scaffolding stage.*
+- Python 3.10+ installed
+- PowerShell (Windows) or terminal (macOS/Linux)
 
-```bash
-# Future setup:
+---
+
+## 2. Setup & Virtual Environment
+
+From the repository root, change to the `backend` directory:
+
+```powershell
+cd backend
+```
+
+Create a virtual environment (if not already created):
+
+```powershell
 python -m venv .venv
-# On Windows: .venv\Scripts\activate
-# On Linux/macOS: source .venv/bin/activate
+```
+
+Activate the virtual environment:
+
+- **Windows PowerShell**:
+  ```powershell
+  .\.venv\Scripts\Activate.ps1
+  ```
+  *(If execution policies restrict script activation, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process` first)*
+
+- **Windows Command Prompt (cmd)**:
+  ```cmd
+  .venv\Scripts\activate.bat
+  ```
+
+- **Linux / macOS**:
+  ```bash
+  source .venv/bin/activate
+  ```
+
+Install dependencies:
+
+```powershell
 pip install -r requirements.txt
+```
+
+---
+
+## 3. Running the Development Server
+
+From the `backend` directory with the virtual environment activated, start the server:
+
+```powershell
 uvicorn app.main:app --reload
 ```
+
+The application runs at:
+- **Base URL**: `http://localhost:8000`
+
+---
+
+## 4. Testing Endpoints
+
+### Health Check Endpoint
+Verify the server is running by opening in your browser or executing `curl`:
+
+- **Browser**: [http://localhost:8000/health](http://localhost:8000/health)
+- **Expected Response**:
+  ```json
+  {"status": "ok"}
+  ```
+
+### Interactive API Documentation
+FastAPI provides automatic interactive Swagger documentation:
+
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
