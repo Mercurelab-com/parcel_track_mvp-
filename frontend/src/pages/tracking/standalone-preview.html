@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ParcelTrack — Public Customer Tracking (Member 4)</title>
+
+  <!-- Google Stitch Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Wix+Madefor+Display:wght@600;700&family=Lato:wght@400;600;700&family=Red+Hat+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN with exact Google Stitch Theme Tokens -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'primary': '#142B4A',
+            'on-primary': '#FFFFFF',
+            'primary-container': '#EBF1FF',
+            'on-primary-container': '#021C3A',
+            'secondary': '#2563EB',
+            'on-secondary': '#FFFFFF',
+            'secondary-container': '#EEF0FF',
+            'on-secondary-container': '#002A78',
+            'surface': '#F8FAFC',
+            'on-surface': '#0B1C30',
+            'surface-container-lowest': '#FFFFFF',
+            'surface-container-low': '#F1F5F9',
+            'surface-container': '#E0E2EB',
+            'on-surface-variant': '#505F76',
+            'outline': '#8292AA',
+            'outline-variant': '#E0E2EB',
+            'success': '#16A34A',
+            'on-success': '#002109',
+            'success-container': '#C5FFC8',
+            'on-success-container': '#003914',
+            'warning': '#F59E0B',
+            'on-warning': '#2A1700',
+            'warning-container': '#FFEEDE',
+            'on-warning-container': '#472A00',
+            'error': '#DC2626',
+            'on-error': '#FFFFFF',
+            'error-container': '#FFEDEA',
+            'on-error-container': '#690005',
+          },
+          borderRadius: {
+            'sm': '6px',
+            'DEFAULT': '8px',
+            'md': '12px',
+            'lg': '16px',
+            'xl': '24px',
+            'full': '9999px',
+          },
+          spacing: {
+            'gutter-xs': '4px',
+            'gutter-sm': '8px',
+            'gutter-md': '16px',
+            'gutter-lg': '24px',
+            'gutter-xl': '32px',
+            'section': '48px',
+            'page-margin': '24px',
+          },
+          fontFamily: {
+            'display': ['"Wix Madefor Display"', 'sans-serif'],
+            'headline': ['"Wix Madefor Display"', 'sans-serif'],
+            'title': ['"Lato"', 'sans-serif'],
+            'body': ['"Lato"', 'sans-serif'],
+            'label': ['"Lato"', 'sans-serif'],
+            'mono': ['"Red Hat Mono"', 'monospace'],
+          },
+          fontSize: {
+            'display-lg': ['48px', { lineHeight: '56px', letterSpacing: '-0.75px', fontWeight: '700' }],
+            'display-lg-mobile': ['32px', { lineHeight: '38px', letterSpacing: '-0.5px', fontWeight: '700' }],
+            'headline-lg': ['32px', { lineHeight: '40px', letterSpacing: '-0.5px', fontWeight: '700' }],
+            'headline-md': ['24px', { lineHeight: '32px', letterSpacing: '-0.25px', fontWeight: '600' }],
+            'title-lg': ['20px', { lineHeight: '28px', letterSpacing: '0px', fontWeight: '600' }],
+            'title-md': ['16px', { lineHeight: '24px', letterSpacing: '0px', fontWeight: '700' }],
+            'body-lg': ['18px', { lineHeight: '28px', letterSpacing: '0px', fontWeight: '400' }],
+            'body-md': ['15px', { lineHeight: '22px', letterSpacing: '0px', fontWeight: '400' }],
+            'body-sm': ['13px', { lineHeight: '18px', letterSpacing: '0px', fontWeight: '400' }],
+            'label-lg': ['15px', { lineHeight: '20px', letterSpacing: '0.1px', fontWeight: '700' }],
+            'label-md': ['13px', { lineHeight: '18px', letterSpacing: '0.2px', fontWeight: '600' }],
+            'label-sm': ['12px', { lineHeight: '16px', letterSpacing: '0.3px', fontWeight: '600' }],
+            'mono-md': ['15px', { lineHeight: '22px', letterSpacing: '0.25px', fontWeight: '600' }],
+            'mono-sm': ['13px', { lineHeight: '18px', letterSpacing: '0.2px', fontWeight: '500' }],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    .material-symbols-outlined {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      line-height: 1 !important;
+      overflow: hidden;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+  </style>
+
+  <!-- React 18 & Babel standalone for zero-config browser execution -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-surface text-on-surface font-body antialiased selection:bg-secondary/20">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // 4 Core Required Statuses
+    const PARCEL_STATUS = {
+      REGISTERED: 'REGISTERED',
+      IN_TRANSIT: 'IN_TRANSIT',
+      ARRIVED: 'ARRIVED',
+      COLLECTED: 'COLLECTED',
+    };
+
+    const STATUS_METADATA = {
+      [PARCEL_STATUS.REGISTERED]: {
+        label: 'Registered',
+        icon: 'inventory_2',
+        colorText: 'text-primary',
+        bgBadge: 'bg-primary-container',
+        textBadge: 'text-on-primary-container',
+        summaryTitle: 'Parcel Registered',
+        summaryDesc: 'Your shipment has been received and registered at the origin agency counter.',
+        timelineDesc: 'Parcel registered at the origin dispatch agency.',
+      },
+      [PARCEL_STATUS.IN_TRANSIT]: {
+        label: 'In Transit',
+        icon: 'local_shipping',
+        colorText: 'text-secondary',
+        bgBadge: 'bg-secondary-container',
+        textBadge: 'text-on-secondary-container',
+        summaryTitle: 'In Transit',
+        summaryDesc: 'Your parcel is currently travelling along the transport corridor.',
+        timelineDesc: 'Parcel dispatched and travelling to its destination.',
+      },
+      [PARCEL_STATUS.ARRIVED]: {
+        label: 'Arrived at Agency',
+        icon: 'storefront',
+        colorText: 'text-warning',
+        bgBadge: 'bg-warning-container',
+        textBadge: 'text-on-warning-container',
+        summaryTitle: 'Ready for Pickup',
+        summaryDesc: 'Your parcel has arrived at the destination branch counter.',
+        timelineDesc: 'Parcel arrived at destination counter and is ready for collection.',
+      },
+      [PARCEL_STATUS.COLLECTED]: {
+        label: 'Collected',
+        icon: 'task_alt',
+        colorText: 'text-success',
+        bgBadge: 'bg-success-container',
+        textBadge: 'text-on-success-container',
+        summaryTitle: 'Successfully Delivered',
+        summaryDesc: 'Package verified and released to designated recipient.',
+        timelineDesc: 'Recipient presented identification and collected the parcel.',
+      },
+    };
+
+    const MOCK_PARCELS = {
+      'PT-2026-001': {
+        trackingNumber: 'PT-2026-001',
+        status: PARCEL_STATUS.IN_TRANSIT,
+        registrationDate: 'Nov 18, 2026 · 09:15 AM',
+        expectedArrival: 'Nov 21, 2026 (Estimated)',
+        expectedArrivalShort: 'Nov 21, 2026',
+        senderName: 'Elena Vance',
+        recipientName: 'Marcus Cole',
+        recipientPhone: '+237 671 234 567',
+        origin: 'Douala Central Agency (Akwa)',
+        destination: 'Bamenda Commercial Hub (Up Station)',
+        pickupBranch: 'Bamenda Up Station Hub - Counter 2',
+        pickupHours: 'Mon - Sat: 07:30 AM - 06:00 PM',
+        weightKg: 4.5,
+        packageType: 'Electronics / Fragile Box',
+        timeline: [
+          { status: PARCEL_STATUS.REGISTERED, timestamp: 'Nov 18, 2026 · 09:15 AM', note: 'Package weighed, tagged, and registered at dispatch counter.' },
+          { status: PARCEL_STATUS.IN_TRANSIT, timestamp: 'Nov 19, 2026 · 02:30 PM', note: 'Dispatched aboard express cargo transport vehicle #CM-741-LT.' },
+        ],
+      },
+      'PT-DLA-BDA-001': {
+        trackingNumber: 'PT-DLA-BDA-001',
+        status: PARCEL_STATUS.ARRIVED,
+        registrationDate: 'Nov 19, 2026 · 08:30 AM',
+        expectedArrival: 'Nov 20, 2026 (Arrived)',
+        expectedArrivalShort: 'Ready for Pickup',
+        senderName: 'Tanyi Roland (Douala)',
+        recipientName: 'Nfor Brenda (Bamenda)',
+        recipientPhone: '+237 675 889 900',
+        origin: 'Douala Agency (Bonaberi Branch)',
+        destination: 'Bamenda Agency (Commercial Avenue)',
+        pickupBranch: 'Bamenda Commercial Avenue Branch — Counter 1',
+        pickupHours: 'Mon - Sat: 08:00 AM - 06:30 PM',
+        weightKg: 2.8,
+        packageType: 'Document Envelope & Goods',
+        timeline: [
+          { status: PARCEL_STATUS.REGISTERED, timestamp: 'Nov 19, 2026 · 08:30 AM', note: 'Intake completed and tracking ID assigned.' },
+          { status: PARCEL_STATUS.IN_TRANSIT, timestamp: 'Nov 19, 2026 · 01:00 PM', note: 'Departed Douala transit depot.' },
+          { status: PARCEL_STATUS.ARRIVED, timestamp: 'Nov 20, 2026 · 04:45 PM', note: 'Package unloaded, scanned into holding room, arrival SMS queued.' },
+        ],
+      },
+      'PT-DLA-BDA-002': {
+        trackingNumber: 'PT-DLA-BDA-002',
+        status: PARCEL_STATUS.REGISTERED,
+        registrationDate: 'Nov 21, 2026 · 04:10 AM',
+        expectedArrival: 'Nov 22, 2026 (Estimated)',
+        expectedArrivalShort: 'Nov 22, 2026',
+        senderName: 'Kouam Samuel',
+        recipientName: 'Bih Florence',
+        recipientPhone: '+237 699 112 233',
+        origin: 'Douala Central Agency (Akwa)',
+        destination: 'Bamenda Commercial Hub',
+        pickupBranch: 'Bamenda Up Station Hub',
+        pickupHours: 'Mon - Sat: 07:30 AM - 06:00 PM',
+        weightKg: 12.0,
+        packageType: 'Textiles & Garments Sacks',
+        timeline: [
+          { status: PARCEL_STATUS.REGISTERED, timestamp: 'Nov 21, 2026 · 04:10 AM', note: 'Intake registered by Desk Operator. Sorting for next departure.' },
+        ],
+      },
+      'PT-DLA-BDA-003': {
+        trackingNumber: 'PT-DLA-BDA-003',
+        status: PARCEL_STATUS.COLLECTED,
+        registrationDate: 'Nov 15, 2026 · 10:00 AM',
+        expectedArrival: 'Nov 17, 2026 (Delivered)',
+        expectedArrivalShort: 'Completed',
+        senderName: 'Fonkeng Divine',
+        recipientName: 'Mbah Patrick',
+        recipientPhone: '+237 670 445 566',
+        origin: 'Douala Central Agency (Akwa)',
+        destination: 'Bamenda Commercial Hub',
+        pickupBranch: 'Bamenda Commercial Hub',
+        pickupHours: 'Mon - Sat: 07:30 AM - 06:00 PM',
+        weightKg: 1.5,
+        packageType: 'Spare Automotive Parts',
+        timeline: [
+          { status: PARCEL_STATUS.REGISTERED, timestamp: 'Nov 15, 2026 · 10:00 AM', note: 'Registered at agency desk.' },
+          { status: PARCEL_STATUS.IN_TRANSIT, timestamp: 'Nov 15, 2026 · 03:00 PM', note: 'Dispatched to destination.' },
+          { status: PARCEL_STATUS.ARRIVED, timestamp: 'Nov 16, 2026 · 06:00 PM', note: 'Stored at pickup desk.' },
+          { status: PARCEL_STATUS.COLLECTED, timestamp: 'Nov 17, 2026 · 11:20 AM', note: 'Released to recipient upon national ID verification.' },
+        ],
+      },
+    };
+
+    function App() {
+      const [viewState, setViewState] = useState('landing'); // 'landing' | 'loading' | 'results' | 'not_found'
+      const [trackingNumber, setTrackingNumber] = useState('');
+      const [parcel, setParcel] = useState(null);
+
+      const performSearch = (code) => {
+        const clean = (code || '').trim().toUpperCase();
+        if (!clean) return;
+
+        setTrackingNumber(clean);
+        setViewState('loading');
+
+        setTimeout(() => {
+          const match = MOCK_PARCELS[clean];
+          if (match) {
+            setParcel(match);
+            setViewState('results');
+          } else {
+            setParcel(null);
+            setViewState('not_found');
+          }
+        }, 550);
+      };
+
+      const reset = () => {
+        setViewState('landing');
+        setTrackingNumber('');
+        setParcel(null);
+      };
+
+      const steps = [
+        PARCEL_STATUS.REGISTERED,
+        PARCEL_STATUS.IN_TRANSIT,
+        PARCEL_STATUS.ARRIVED,
+        PARCEL_STATUS.COLLECTED,
+      ];
+      const currentStepIdx = parcel ? steps.indexOf(parcel.status) : 0;
+      const currentMeta = parcel ? STATUS_METADATA[parcel.status] : null;
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          {/* Header */}
+          <header className="bg-surface-container-lowest border-b border-outline-variant">
+            <div className="max-w-6xl mx-auto px-page-margin h-20 flex items-center justify-between gap-gutter-lg">
+              <button onClick={reset} className="flex items-center gap-3 cursor-pointer text-left">
+                <div className="w-10 h-10 rounded-md bg-primary text-on-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-title-lg">local_shipping</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-headline text-title-lg text-primary">ParcelTrack</span>
+                  <span className="text-[11px] font-body text-on-surface-variant uppercase tracking-wider -mt-1 hidden sm:inline">
+                    Member 4 · Customer Tracking
+                  </span>
+                </div>
+              </button>
+              <nav className="flex items-center gap-4 sm:gap-gutter-xl">
+                <button onClick={reset} className="font-label text-label-md sm:text-label-lg text-secondary border-b-2 border-secondary py-1 cursor-pointer">
+                  Track Parcel
+                </button>
+                <a href="#agencies" onClick={(e) => { e.preventDefault(); alert("ParcelTrack Network Agencies:\n1. Douala Agency (Akwa & Bonaberi Hubs)\n2. Bamenda Agency (Commercial Ave & Up Station Hubs)"); }} className="font-label text-label-md sm:text-label-lg text-on-surface-variant hover:text-primary py-1">
+                  Agencies
+                </a>
+              </nav>
+            </div>
+          </header>
+
+          {/* Body Content */}
+          <main className="flex-1 flex flex-col">
+            {/* 1. LANDING SCREEN */}
+            {viewState === 'landing' && (
+              <section className="flex-1 flex items-center py-section">
+                <div className="max-w-6xl mx-auto px-page-margin w-full">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter-xl items-center">
+                    <div className="lg:col-span-7 flex flex-col gap-gutter-lg">
+                      <div className="flex flex-col gap-gutter-md">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label text-xs font-bold uppercase tracking-wider w-fit">
+                          <span className="material-symbols-outlined text-sm">route</span>
+                          Douala ↔ Bamenda Inter-City Corridor
+                        </span>
+                        <h1 className="font-display text-display-lg-mobile sm:text-display-lg text-primary text-balance leading-tight">
+                          Your Parcel, Every Step of the Way.
+                        </h1>
+                        <p className="font-body text-body-lg text-on-surface-variant max-w-prose">
+                          Stay informed about your delivery. Enter your tracking code below to check parcel status, timeline progress, and counter pickup notices.
+                        </p>
+                      </div>
+
+                      {/* Search Card */}
+                      <article className="bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm p-gutter-lg flex flex-col gap-gutter-md">
+                        <form onSubmit={(e) => { e.preventDefault(); performSearch(trackingNumber); }} className="flex flex-col gap-gutter-md">
+                          <div className="flex flex-col sm:flex-row gap-gutter-md items-stretch sm:items-start">
+                            <label className="flex-1 flex flex-col gap-gutter-sm">
+                              <span className="sr-only">Tracking Number</span>
+                              <div className="relative flex items-center w-full">
+                                <span className="material-symbols-outlined absolute left-4 text-outline pointer-events-none">inventory_2</span>
+                                <input
+                                  type="text"
+                                  value={trackingNumber}
+                                  onChange={(e) => setTrackingNumber(e.target.value)}
+                                  placeholder="Enter your tracking number (e.g. PT-2026-001)"
+                                  className="w-full pl-12 pr-gutter-md py-3.5 rounded-md bg-surface-container-lowest border border-outline-variant font-mono text-mono-md text-on-surface placeholder:font-body placeholder:text-body-md placeholder:text-outline focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:outline-none"
+                                />
+                              </div>
+                            </label>
+                            <button
+                              type="submit"
+                              disabled={!trackingNumber.trim()}
+                              className="inline-flex items-center justify-center gap-gutter-sm px-gutter-xl py-3.5 rounded-md bg-secondary text-on-secondary font-label text-label-lg shadow-sm hover:bg-primary transition-colors cursor-pointer disabled:opacity-60"
+                            >
+                              <span className="material-symbols-outlined text-title-lg">search</span>
+                              <span>Track Parcel</span>
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-gutter-sm text-on-surface-variant">
+                            <span className="material-symbols-outlined text-body-lg text-outline">receipt_long</span>
+                            <span className="font-body text-body-sm text-on-surface-variant">Your tracking code can be found on your agency intake receipt.</span>
+                          </div>
+                        </form>
+
+                        {/* Demo Quick Try Chips */}
+                        <div className="pt-2 border-t border-outline-variant/60 flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-semibold text-on-surface-variant uppercase">Try Status:</span>
+                          <button onClick={() => performSearch('PT-2026-001')} className="text-xs font-mono px-2 py-1 rounded bg-secondary-container text-on-secondary-container hover:bg-secondary hover:text-white cursor-pointer">PT-2026-001 (In Transit)</button>
+                          <button onClick={() => performSearch('PT-DLA-BDA-001')} className="text-xs font-mono px-2 py-1 rounded bg-warning-container text-on-warning-container hover:bg-warning hover:text-white cursor-pointer">PT-DLA-BDA-001 (Arrived)</button>
+                          <button onClick={() => performSearch('PT-DLA-BDA-002')} className="text-xs font-mono px-2 py-1 rounded bg-primary-container text-on-primary-container hover:bg-primary hover:text-white cursor-pointer">PT-DLA-BDA-002 (Registered)</button>
+                          <button onClick={() => performSearch('PT-DLA-BDA-003')} className="text-xs font-mono px-2 py-1 rounded bg-success-container text-on-success-container hover:bg-success hover:text-white cursor-pointer">PT-DLA-BDA-003 (Collected)</button>
+                          <button onClick={() => performSearch('PT-2026-999')} className="text-xs font-mono px-2 py-1 rounded bg-surface-container-low text-on-surface-variant hover:bg-outline-variant cursor-pointer">PT-2026-999 (Not Found)</button>
+                        </div>
+                      </article>
+                    </div>
+
+                    {/* Right Graphic */}
+                    <div className="lg:col-span-5 flex justify-center">
+                      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-gutter-lg w-full flex flex-col gap-4">
+                        <div className="h-64 rounded-lg bg-gradient-to-br from-primary via-secondary to-primary-container p-6 flex flex-col justify-between text-on-primary shadow-inner relative overflow-hidden">
+                          <div className="flex items-center justify-between z-10">
+                            <span className="font-bold text-sm uppercase">Transport Agency Network</span>
+                            <span className="text-xs bg-white/20 backdrop-blur px-2.5 py-1 rounded-full font-mono">Live Tracking</span>
+                          </div>
+                          <div className="z-10 flex flex-col gap-2">
+                            <div className="text-xs font-mono text-white/80 border-b border-white/20 pb-2">Douala Agency ➔ Bamenda Hub</div>
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-white text-secondary flex items-center justify-center font-bold">
+                                <span className="material-symbols-outlined">package_2</span>
+                              </div>
+                              <div>
+                                <div className="font-bold text-base">Direct Inter-City Route</div>
+                                <div className="text-xs text-white/80">Full Lifecycle Visibility</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-center">
+                          <div className="p-3 bg-surface-container-low rounded-lg">
+                            <span className="block font-headline text-lg font-bold text-primary">Public</span>
+                            <span className="text-xs text-on-surface-variant font-medium">No Login Needed</span>
+                          </div>
+                          <div className="p-3 bg-surface-container-low rounded-lg">
+                            <span className="block font-headline text-lg font-bold text-secondary">Arrival Alert</span>
+                            <span className="text-xs text-on-surface-variant font-medium">Counter Pickup Info</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* 2. LOADING SCREEN */}
+            {viewState === 'loading' && (
+              <section className="flex-1 flex items-center justify-center py-section px-page-margin">
+                <article className="w-full max-w-xl mx-auto bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm p-gutter-xl flex flex-col items-center text-center gap-gutter-lg animate-pulse">
+                  <div className="w-20 h-20 rounded-full bg-secondary-container text-secondary flex items-center justify-center relative">
+                    <div className="absolute inset-0 rounded-full border-4 border-secondary border-t-transparent animate-spin"></div>
+                    <span className="material-symbols-outlined text-3xl">local_shipping</span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <h2 className="font-headline text-title-lg text-primary">Searching for Parcel...</h2>
+                    <p className="font-body text-body-md text-on-surface-variant">
+                      Querying agency transport ledger for <span className="font-mono text-secondary font-semibold">{trackingNumber}</span>
+                    </p>
+                  </div>
+                  <div className="w-full flex flex-col gap-3 pt-4 border-t border-outline-variant/60">
+                    <div className="h-4 bg-surface-container rounded-full w-3/4 mx-auto"></div>
+                    <div className="h-4 bg-surface-container rounded-full w-1/2 mx-auto"></div>
+                  </div>
+                </article>
+              </section>
+            )}
+
+            {/* 3. NOT FOUND SCREEN */}
+            {viewState === 'not_found' && (
+              <section className="flex-1 flex items-center justify-center py-section px-page-margin">
+                <article className="w-full max-w-xl mx-auto bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm p-gutter-xl flex flex-col items-center text-center gap-gutter-lg">
+                  <div className="w-36 h-36 rounded-full bg-surface-container-low flex items-center justify-center border border-outline-variant/60">
+                    <div className="relative">
+                      <span className="material-symbols-outlined text-6xl text-outline">package_2</span>
+                      <span className="material-symbols-outlined text-3xl text-error absolute -bottom-2 -right-2 bg-surface-container-lowest rounded-full p-1 shadow">search_off</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-gutter-sm">
+                    <h1 className="font-headline text-headline-md sm:text-headline-lg text-primary">We couldn't find your parcel.</h1>
+                    <p className="font-body text-body-md sm:text-body-lg text-on-surface-variant max-w-md mx-auto">
+                      No shipment matched <code className="font-mono text-error font-semibold bg-error-container/50 px-1.5 py-0.5 rounded">{trackingNumber}</code>.
+                      Please check your tracking code and try again.
+                    </p>
+                  </div>
+                  <form onSubmit={(e) => { e.preventDefault(); performSearch(trackingNumber); }} className="w-full flex flex-col gap-gutter-md text-left">
+                    <div className="flex flex-col sm:flex-row gap-gutter-md items-stretch sm:items-start">
+                      <label className="flex-1 flex flex-col gap-gutter-sm">
+                        <div className="relative flex items-center w-full">
+                          <span className="material-symbols-outlined absolute left-4 text-outline pointer-events-none">inventory_2</span>
+                          <input
+                            type="text"
+                            value={trackingNumber}
+                            onChange={(e) => setTrackingNumber(e.target.value)}
+                            placeholder="Enter your tracking number"
+                            className="w-full pl-12 pr-gutter-md py-3.5 rounded-md bg-surface-container-lowest border border-outline-variant font-mono text-mono-md"
+                          />
+                        </div>
+                      </label>
+                      <button type="submit" className="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-3.5 rounded-md bg-secondary text-on-secondary font-label text-label-lg shadow-sm hover:bg-primary transition-colors cursor-pointer">
+                        <span className="material-symbols-outlined text-title-lg">refresh</span>
+                        <span>Try Again</span>
+                      </button>
+                    </div>
+                  </form>
+                  <button onClick={reset} className="text-sm font-label text-secondary hover:underline flex items-center gap-1 cursor-pointer">
+                    <span className="material-symbols-outlined text-sm">arrow_back</span>
+                    Return to Home
+                  </button>
+                </article>
+              </section>
+            )}
+
+            {/* 4. RESULTS SCREEN */}
+            {viewState === 'results' && parcel && (
+              <section className="flex-1 py-gutter-xl">
+                <div className="max-w-5xl mx-auto px-page-margin flex flex-col gap-gutter-lg">
+                  {/* Top Bar */}
+                  <div className="flex flex-col md:flex-row md:items-end justify-between gap-gutter-md">
+                    <div className="flex flex-col gap-gutter-sm">
+                      <div className="flex flex-wrap items-center gap-gutter-md">
+                        <h1 className="font-headline text-headline-md sm:text-headline-lg text-primary">Tracking Results</h1>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-label text-label-md font-semibold ${currentMeta.bgBadge} ${currentMeta.textBadge}`}>
+                          <span className="material-symbols-outlined text-body-md">{currentMeta.icon}</span>
+                          <span>{currentMeta.label}</span>
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-gutter-sm text-on-surface-variant">
+                        <span className="font-body text-body-md">Tracking Number:</span>
+                        <span className="font-mono text-mono-md text-primary font-bold tabular-nums bg-surface-container-low px-2.5 py-0.5 rounded-sm border border-outline-variant">
+                          {parcel.trackingNumber}
+                        </span>
+                        <span className="text-outline">·</span>
+                        <span className="font-body text-body-md">{parcel.origin} ➔ {parcel.destination}</span>
+                      </div>
+                    </div>
+                    <button onClick={reset} className="inline-flex items-center justify-center gap-gutter-sm px-gutter-md py-2.5 rounded-md bg-surface-container-lowest text-primary border border-outline-variant font-label text-label-md hover:bg-surface-container-low cursor-pointer shadow-sm">
+                      <span className="material-symbols-outlined text-body-lg">search</span>
+                      <span>Track Another Parcel</span>
+                    </button>
+                  </div>
+
+                  {/* Arrival Banner if status === ARRIVED */}
+                  {parcel.status === PARCEL_STATUS.ARRIVED && (
+                    <aside className="rounded-lg bg-warning-container/40 border-2 border-warning p-gutter-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-gutter-md shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-warning text-on-warning flex items-center justify-center shrink-0 mt-0.5">
+                          <span className="material-symbols-outlined text-title-lg">notifications_active</span>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <span className="font-headline text-title-md text-on-warning-container font-bold">Parcel Ready for Counter Pickup!</span>
+                          <p className="font-body text-body-sm text-on-warning-container">
+                            Your parcel has arrived at <strong>{parcel.pickupBranch || parcel.destination}</strong>.
+                            Please present your original National Identity Card (CNI) or receipt code at the agency counter.
+                          </p>
+                          <span className="text-xs font-mono text-on-warning-container/80">Counter Hours: {parcel.pickupHours}</span>
+                        </div>
+                      </div>
+                    </aside>
+                  )}
+
+                  {/* Delivery Status Card */}
+                  <article className="bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm p-gutter-lg flex flex-col sm:flex-row sm:items-center justify-between gap-gutter-md">
+                    <div className="flex items-start sm:items-center gap-gutter-md">
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${currentMeta.bgBadge} ${currentMeta.colorText}`}>
+                        <span className="material-symbols-outlined text-headline-md">{currentMeta.icon}</span>
+                      </div>
+                      <div className="flex flex-col gap-gutter-xs">
+                        <span className="font-label text-label-sm uppercase tracking-wider text-secondary font-semibold">Current Delivery Status</span>
+                        <h2 className="font-headline text-title-lg text-primary">{currentMeta.label}</h2>
+                        <p className="font-body text-body-md text-on-surface-variant">{currentMeta.summaryDesc}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col sm:items-end gap-gutter-xs border-t sm:border-t-0 pt-gutter-md sm:pt-0 border-outline-variant shrink-0">
+                      <span className="font-label text-label-sm text-on-surface-variant">Expected Arrival</span>
+                      <span className="font-title text-title-md text-primary font-semibold">{parcel.expectedArrivalShort}</span>
+                    </div>
+                  </article>
+
+                  {/* Details & Journey Timeline */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter-lg items-start">
+                    {/* Left: Parcel Information */}
+                    <article className="lg:col-span-7 bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm p-gutter-lg flex flex-col gap-gutter-lg">
+                      <header className="flex items-center justify-between border-b border-outline-variant pb-gutter-md">
+                        <div className="flex flex-col gap-gutter-xs">
+                          <h2 className="font-headline text-title-lg text-primary">Parcel Information</h2>
+                          <p className="font-body text-body-sm text-on-surface-variant">Verified agency registration and route details</p>
+                        </div>
+                        <span className="material-symbols-outlined text-headline-md text-outline">package_2</span>
+                      </header>
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-gutter-lg gap-y-gutter-md">
+                        <div className="flex flex-col gap-gutter-xs">
+                          <dt className="font-label text-label-sm text-on-surface-variant">Tracking Number</dt>
+                          <dd className="font-mono text-mono-md text-primary font-bold">{parcel.trackingNumber}</dd>
+                        </div>
+                        <div className="flex flex-col gap-gutter-xs">
+                          <dt className="font-label text-label-sm text-on-surface-variant">Registration Date</dt>
+                          <dd className="font-body text-body-md text-on-surface">{parcel.registrationDate}</dd>
+                        </div>
+                        <div className="flex flex-col gap-gutter-xs">
+                          <dt className="font-label text-label-sm text-on-surface-variant">Sender</dt>
+                          <dd className="font-title text-title-md text-on-surface">{parcel.senderName}</dd>
+                        </div>
+                        <div className="flex flex-col gap-gutter-xs">
+                          <dt className="font-label text-label-sm text-on-surface-variant">Recipient</dt>
+                          <dd className="font-title text-title-md text-on-surface">
+                            {parcel.recipientName}
+                            <span className="block text-xs font-mono text-on-surface-variant">{parcel.recipientPhone}</span>
+                          </dd>
+                        </div>
+                        <div className="flex flex-col gap-gutter-xs">
+                          <dt className="font-label text-label-sm text-on-surface-variant">Origin Agency</dt>
+                          <dd className="font-body text-body-md text-on-surface flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-body-lg text-primary">trip_origin</span>
+                            <span>{parcel.origin}</span>
+                          </dd>
+                        </div>
+                        <div className="flex flex-col gap-gutter-xs">
+                          <dt className="font-label text-label-sm text-on-surface-variant">Destination Agency</dt>
+                          <dd className="font-body text-body-md text-on-surface flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-body-lg text-secondary">location_on</span>
+                            <span>{parcel.destination}</span>
+                          </dd>
+                        </div>
+                        <div className="flex flex-col gap-gutter-xs">
+                          <dt className="font-label text-label-sm text-on-surface-variant">Weight & Type</dt>
+                          <dd className="font-body text-body-md text-on-surface">{parcel.weightKg} kg · {parcel.packageType}</dd>
+                        </div>
+                        <div className="flex flex-col gap-gutter-xs sm:col-span-2 pt-gutter-sm border-t border-outline-variant">
+                          <dt className="font-label text-label-sm text-on-surface-variant">Expected Arrival</dt>
+                          <dd className="font-title text-title-md text-primary font-semibold">{parcel.expectedArrival}</dd>
+                        </div>
+                      </dl>
+                    </article>
+
+                    {/* Right: Journey Timeline */}
+                    <article className="lg:col-span-5 bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm p-gutter-lg flex flex-col gap-gutter-lg">
+                      <header className="flex flex-col gap-gutter-xs border-b border-outline-variant pb-gutter-md">
+                        <h2 className="font-headline text-title-lg text-primary">Parcel Journey</h2>
+                        <p className="font-body text-body-sm text-on-surface-variant">Step-by-step delivery milestones</p>
+                      </header>
+
+                      <ol className="flex flex-col" aria-label="Parcel delivery timeline">
+                        {steps.map((st, idx) => {
+                          const meta = STATUS_METADATA[st];
+                          const isDone = idx < currentStepIdx;
+                          const isCurrent = idx === currentStepIdx;
+                          const isUpcoming = idx > currentStepIdx;
+                          const isLast = idx === steps.length - 1;
+                          const ev = (parcel.timeline || []).find(t => t.status === st);
+
+                          return (
+                            <li key={st} className={`relative flex gap-gutter-md ${!isLast ? 'pb-gutter-lg' : ''}`}>
+                              <div className="flex flex-col items-center">
+                                {isDone && (
+                                  <div className="w-9 h-9 rounded-full bg-success text-on-primary flex items-center justify-center shrink-0 z-10 shadow-sm">
+                                    <span className="material-symbols-outlined text-title-lg">check</span>
+                                  </div>
+                                )}
+                                {isCurrent && (
+                                  <div className="w-9 h-9 rounded-full bg-secondary text-on-secondary ring-4 ring-secondary-container flex items-center justify-center shrink-0 z-10 shadow-sm">
+                                    <span className="material-symbols-outlined text-title-lg">{meta.icon}</span>
+                                  </div>
+                                )}
+                                {isUpcoming && (
+                                  <div className="w-9 h-9 rounded-full bg-surface-container-low border-2 border-outline-variant text-on-surface-variant flex items-center justify-center shrink-0 z-10">
+                                    <span className="material-symbols-outlined text-title-lg text-outline">{meta.icon}</span>
+                                  </div>
+                                )}
+                                {!isLast && (
+                                  <div className={`w-0.5 flex-1 mt-1 ${isDone ? 'bg-success' : 'bg-outline-variant'}`}></div>
+                                )}
+                              </div>
+                              <div className="flex flex-col gap-gutter-xs pt-1 flex-1">
+                                <div className="flex items-center gap-gutter-sm flex-wrap">
+                                  <span className={`font-label text-label-lg ${isCurrent ? 'text-secondary font-bold' : isDone ? 'text-primary font-semibold' : 'text-on-surface-variant'}`}>
+                                    {meta.label}
+                                  </span>
+                                  {isDone && <span className="text-xs bg-success-container text-on-success-container px-2 py-0.5 rounded-full font-medium">Completed</span>}
+                                  {isCurrent && <span className="text-xs bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-semibold">Current</span>}
+                                </div>
+                                <p className={`font-body text-body-md ${isCurrent ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>
+                                  {ev ? ev.note : meta.timelineDesc}
+                                </p>
+                                {ev && ev.timestamp && (
+                                  <time className={`font-mono text-mono-sm tabular-nums ${isCurrent ? 'text-secondary font-semibold' : 'text-on-surface-variant'}`}>
+                                    {ev.timestamp}
+                                  </time>
+                                )}
+                                {isUpcoming && (
+                                  <span className="font-mono text-mono-sm text-outline italic">Pending</span>
+                                )}
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </article>
+                  </div>
+
+                  {/* Quick Try Another query */}
+                  <div className="pt-4 border-t border-outline-variant flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold uppercase text-on-surface-variant">Switch Demo ID:</span>
+                    <button onClick={() => performSearch('PT-2026-001')} className="text-xs font-mono px-2 py-1 rounded bg-secondary-container text-on-secondary-container hover:bg-secondary hover:text-white cursor-pointer">PT-2026-001 (In Transit)</button>
+                    <button onClick={() => performSearch('PT-DLA-BDA-001')} className="text-xs font-mono px-2 py-1 rounded bg-warning-container text-on-warning-container hover:bg-warning hover:text-white cursor-pointer">PT-DLA-BDA-001 (Arrived)</button>
+                    <button onClick={() => performSearch('PT-DLA-BDA-002')} className="text-xs font-mono px-2 py-1 rounded bg-primary-container text-on-primary-container hover:bg-primary hover:text-white cursor-pointer">PT-DLA-BDA-002 (Registered)</button>
+                    <button onClick={() => performSearch('PT-DLA-BDA-003')} className="text-xs font-mono px-2 py-1 rounded bg-success-container text-on-success-container hover:bg-success hover:text-white cursor-pointer">PT-DLA-BDA-003 (Collected)</button>
+                    <button onClick={() => performSearch('PT-2026-999')} className="text-xs font-mono px-2 py-1 rounded bg-surface-container-low text-on-surface-variant hover:bg-outline-variant cursor-pointer">PT-2026-999 (Not Found)</button>
+                  </div>
+                </div>
+              </section>
+            )}
+          </main>
+
+          {/* Footer */}
+          <footer className="bg-surface-container-lowest border-t border-outline-variant py-gutter-lg mt-auto">
+            <div className="max-w-6xl mx-auto px-page-margin flex flex-col sm:flex-row items-center justify-between gap-gutter-md">
+              <div className="flex items-center gap-gutter-sm text-on-surface-variant">
+                <span className="font-title text-title-md text-primary font-semibold">ParcelTrack</span>
+                <span className="font-body text-body-sm text-outline">·</span>
+                <span className="font-body text-body-sm text-on-surface-variant">Public Customer Tracking Service</span>
+              </div>
+              <p className="font-body text-body-sm text-on-surface-variant text-center sm:text-right">
+                © 2026 ParcelTrack. Douala ↔ Bamenda Inter-City Express. Need help? Visit your nearest transport agency.
+              </p>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
