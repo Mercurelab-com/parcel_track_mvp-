@@ -16,22 +16,36 @@ import { Select } from '../ui/Select'
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
-const PHONE_RE = /^\+?[0-9\s\-()]{7,20}$/
+/**
+ * Accepts Cameroon mobile numbers: 9 digits starting with 6.
+ * Optional +237 country-code prefix (with or without a space after it).
+ * Examples that pass:  677100001  |  +237677100001  |  +237 677 100 001
+ * Examples that fail:  +1234567890  |  077100001  |  12345
+ */
+const CM_PHONE_RE = /^(\+237\s?)?6\d{8}$/
+
+/** Strip spaces and hyphens before testing so "677 100 001" still passes */
+function normalisePhone(raw) {
+  return raw.replace(/[\s\-]/g, '')
+}
+
+function validatePhone(raw, label) {
+  if (!raw.trim()) return `${label} phone is required.`
+  if (!CM_PHONE_RE.test(normalisePhone(raw))) {
+    return `${label} phone must be a Cameroon number — 9 digits starting with 6 (e.g. 677 100 001 or +237 677 100 001).`
+  }
+  return null
+}
 
 function validate(fields) {
   const errors = {}
   if (!fields.sender_name.trim()) errors.sender_name = 'Sender name is required.'
-  if (!fields.sender_phone.trim()) {
-    errors.sender_phone = 'Sender phone is required.'
-  } else if (!PHONE_RE.test(fields.sender_phone)) {
-    errors.sender_phone = 'Enter a valid phone number.'
-  }
+  const senderPhoneErr = validatePhone(fields.sender_phone, 'Sender')
+  if (senderPhoneErr) errors.sender_phone = senderPhoneErr
+
   if (!fields.recipient_name.trim()) errors.recipient_name = 'Recipient name is required.'
-  if (!fields.recipient_phone.trim()) {
-    errors.recipient_phone = 'Recipient phone is required.'
-  } else if (!PHONE_RE.test(fields.recipient_phone)) {
-    errors.recipient_phone = 'Enter a valid phone number.'
-  }
+  const recipientPhoneErr = validatePhone(fields.recipient_phone, 'Recipient')
+  if (recipientPhoneErr) errors.recipient_phone = recipientPhoneErr
   if (!fields.origin) errors.origin = 'Origin city is required.'
   if (!fields.destination) errors.destination = 'Destination city is required.'
   if (fields.origin && fields.destination && fields.origin === fields.destination) {
@@ -147,7 +161,7 @@ export default function ParcelForm({ onSuccess, onCancel }) {
           <Field label="Phone Number" error={errors.sender_phone} required>
             <Input
               type="tel"
-              placeholder="+237 6XX XXX XXX"
+              placeholder="6XX XXX XXX or +237 6XX XXX XXX"
               value={fields.sender_phone}
               onChange={(e) => set('sender_phone', e.target.value)}
               error={errors.sender_phone}
@@ -174,7 +188,7 @@ export default function ParcelForm({ onSuccess, onCancel }) {
           <Field label="Phone Number" error={errors.recipient_phone} required>
             <Input
               type="tel"
-              placeholder="+237 6XX XXX XXX"
+              placeholder="6XX XXX XXX or +237 6XX XXX XXX"
               value={fields.recipient_phone}
               onChange={(e) => set('recipient_phone', e.target.value)}
               error={errors.recipient_phone}
