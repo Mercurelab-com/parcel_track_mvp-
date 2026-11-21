@@ -12,7 +12,7 @@
  *   onStatus     – fn(string)
  *   onRowClick   – fn(parcel)   optional — called when a row is clicked
  */
-import { STATUS_LABELS, STATUS_OPTIONS, statusBadgeClass, formatXAF, formatDate } from '../../utils/formatters'
+import { STATUS_LABELS, STATUS_OPTIONS, statusBadgeClass, formatDate } from '../../utils/formatters'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 
@@ -67,7 +67,7 @@ function StatusBadge({ status }) {
 function SkeletonRow() {
   return (
     <tr>
-      {Array.from({ length: 8 }).map((_, i) => (
+      {Array.from({ length: 6 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
           <div className="h-4 bg-gray-100 rounded animate-pulse" />
         </td>
@@ -82,7 +82,7 @@ function EmptyState({ search, statusFilter }) {
   const hasFilter = search || statusFilter
   return (
     <tr>
-      <td colSpan={8} className="px-4 py-14 text-center text-sm text-gray-500">
+      <td colSpan={6} className="px-4 py-14 text-center text-sm text-gray-500">
         {hasFilter
           ? 'No parcels match your search or filter.'
           : 'No parcels registered yet. Use the form above to add one.'}
@@ -107,8 +107,6 @@ export default function ParcelTable({
     { label: 'Sender' },
     { label: 'Recipient' },
     { label: 'Route' },
-    { label: 'Weight' },
-    { label: 'Fee (XAF)' },
     { label: 'Status' },
     { label: 'Registered' },
   ]
@@ -148,7 +146,7 @@ export default function ParcelTable({
               ? <EmptyState search={search} statusFilter={statusFilter} />
               : parcels.map((p) => (
                   <tr
-                    key={p.id}
+                    key={p.tracking_id}
                     onClick={() => onRowClick?.(p)}
                     className={`transition-colors ${onRowClick ? 'cursor-pointer hover:bg-blue-50' : 'hover:bg-gray-50'}`}
                   >
@@ -165,12 +163,6 @@ export default function ParcelTable({
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-gray-700">
                       {p.origin} → {p.destination}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-700">
-                      {p.weight_kg} kg
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-700 font-medium">
-                      {formatXAF(p.fee_xaf)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <StatusBadge status={p.status} />
